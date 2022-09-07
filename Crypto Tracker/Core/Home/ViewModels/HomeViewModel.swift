@@ -26,11 +26,39 @@ class HomeViewModel : ObservableObject {
     
     func addSubscribers(){
         
-        dataService.$allCoins
+        // After searchtext updates, we don't need that.Because allcoins already updates at searchtext
+//        dataService.$allCoins
+//            .sink { [weak self] (returnedCoins) in
+//                self?.allCoins = returnedCoins
+//            }
+//            .store(in: &cancellable)
+        
+        
+        //update allCoins
+        $searchText
+            .combineLatest(dataService.$allCoins)
+            .debounce(for: 0.5, scheduler: DispatchQueue.main)
+            .map(filterCoins)
             .sink { [weak self] (returnedCoins) in
                 self?.allCoins = returnedCoins
             }
             .store(in: &cancellable)
+    }
+    
+    private func filterCoins(text:String, coins:[CoinModel]) -> [CoinModel] {
+        
+        guard !text.isEmpty else{
+            return coins
+        }
+        
+        let lowercasedText = text.lowercased()
+        
+        let filteredCoins = coins.filter { coin in
+            return coin.name.lowercased().contains(lowercasedText) ||
+            coin.symbol.lowercased().contains(lowercasedText) ||
+            coin.id.lowercased().contains(lowercasedText)
+        }
+        return filteredCoins
     }
     
 }
