@@ -23,8 +23,10 @@ struct HomeView: View {
                 
                 homeHeader
                 
-                columnTitles
+                SearchBarView(searchText: $vm.searchText)
                 
+                columnTitles
+               
                 if !showPortfolio{
                     allCoinsList
                         .transition(.move(edge: .leading))
