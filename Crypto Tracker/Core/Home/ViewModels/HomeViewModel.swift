@@ -11,14 +11,13 @@ import Combine
 class HomeViewModel : ObservableObject {
     
     @Published var statistics : [StatisticModel] = []
-    
     @Published var allCoins : [CoinModel] = []
     @Published var portfolioCoins : [CoinModel] = []
-    
     @Published var searchText : String = ""
     
     private let coinDataService = CoinDataService()
     private let marketDataService = MarketDataService()
+    private let portfolioDataService  = PortfolioDataService()
     private var cancellable = Set<AnyCancellable>()
     
     init(){
@@ -28,14 +27,6 @@ class HomeViewModel : ObservableObject {
     }
     
     func addSubscribers(){
-        
-        // After searchtext updates, we don't need that.Because allcoins already updates at searchtext
-//        dataService.$allCoins
-//            .sink { [weak self] (returnedCoins) in
-//                self?.allCoins = returnedCoins
-//            }
-//            .store(in: &cancellable)
-        
         
         //update allCoins
         $searchText
@@ -47,13 +38,37 @@ class HomeViewModel : ObservableObject {
             }
             .store(in: &cancellable)
         
+        // updade porfolio coins
+        $allCoins
+            .combineLatest(portfolioDataService.$savedEntities)
+            .map { (coinModels, portfolioEntities)-> [CoinModel] in
+                coinModels
+                    .compactMap { (coin) -> CoinModel? in
+                        guard let entitiy = portfolioEntities.first(where: {$0.coinID == coin.id}) else {
+                            return nil
+                        }
+                        return coin.updateHolding(amount: entitiy.amount)
+                    }
+            }
+            .sink { [weak self] (returnedCoins) in
+                self?.portfolioCoins = returnedCoins
+            }
+            .store(in: &cancellable)
+        
         //update marketData
         marketDataService.$marketData
+            .combineLatest($portfolioCoins)
             .map(marketGlobalData)
             .sink { [weak self] (returnedStats) in
                 self?.statistics = returnedStats
             }
             .store(in: &cancellable)
+        
+        
+    }
+    
+    func updatePortfolio(coin: CoinModel, amount: Double){
+        portfolioDataService.updatePortfolio(coin: coin, amount: amount)
     }
     
     private func filterCoins(text:String, coins:[CoinModel]) -> [CoinModel] {
@@ -72,7 +87,7 @@ class HomeViewModel : ObservableObject {
         return filteredCoins
     }
     
-    private func marketGlobalData (marketDataModel: MarketDataModel?) -> [StatisticModel] {
+    private func marketGlobalData (marketDataModel: MarketDataModel?, portfolioCoins : [CoinModel]) -> [StatisticModel] {
         
         var stats : [StatisticModel] = []
         
