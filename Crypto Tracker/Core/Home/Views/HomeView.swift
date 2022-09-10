@@ -13,6 +13,9 @@ struct HomeView: View {
     @State private var showPortfolio : Bool = false //animate right
     @State private var showPortfolioView : Bool = false // new sheet
     
+    @State private var selectedCoin : CoinModel? = nil
+    @State private var showDetailView : Bool = false
+    
     var body: some View {
         ZStack{
             //background layer
@@ -40,6 +43,8 @@ struct HomeView: View {
                         .refreshable {
                             vm.reloadData()
                         }
+                        
+                        
                 }else if showPortfolio{
                     portfolioCoinsList
                         .transition(.move(edge: .trailing))
@@ -49,6 +54,15 @@ struct HomeView: View {
                 
             }
         }
+        .background(
+            NavigationLink(isActive: $showDetailView, destination: {
+                DetailLoadingView(coin: $selectedCoin)
+            }, label: {
+                EmptyView()
+            }))
+        
+        
+        
     }
 }
 
@@ -86,9 +100,15 @@ extension HomeView {
             ForEach(vm.allCoins) { coin in
                 CoinRowView(coin: coin, showHoldingColumn: false)
                     .listRowInsets(.init(top: 10, leading: 0, bottom: 10, trailing: 10))
+                    .onTapGesture {
+                        segue(coin: coin)
+                    }
+                    
             }
         }
         .listStyle(.plain)
+        .contentShape(RoundedRectangle(cornerRadius: 1))
+       
     }
     
     private var portfolioCoinsList : some View {
@@ -96,9 +116,17 @@ extension HomeView {
             ForEach(vm.portfolioCoins) { coin in
                 CoinRowView(coin: coin, showHoldingColumn: true)
                     .listRowInsets(.init(top: 10, leading: 0, bottom: 10, trailing: 10))
+                    .onTapGesture {
+                        segue(coin: coin)
+                    }
             }
         }
         .listStyle(.plain)
+    }
+    
+    private func segue(coin : CoinModel){
+        selectedCoin = coin
+        showDetailView.toggle()
     }
     
     private var columnTitles : some View {

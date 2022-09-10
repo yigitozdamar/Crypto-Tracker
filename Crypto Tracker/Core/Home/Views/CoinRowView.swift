@@ -24,6 +24,7 @@ struct CoinRowView: View {
             
             rightColumn        }
         .font(.subheadline)
+        .contentShape(RoundedRectangle(cornerRadius: 1))
     }
 }
 
