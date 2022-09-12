@@ -12,7 +12,7 @@ struct HomeView: View {
     @EnvironmentObject private var vm: HomeViewModel
     @State private var showPortfolio : Bool = false //animate right
     @State private var showPortfolioView : Bool = false // new sheet
-    
+    @State private var showSettingsView : Bool = false
     @State private var selectedCoin : CoinModel? = nil
     @State private var showDetailView : Bool = false
     
@@ -53,6 +53,9 @@ struct HomeView: View {
                 
                 
             }
+            .sheet(isPresented: $showSettingsView) {
+                SettingsView()
+            }
         }
         .background(
             NavigationLink(isActive: $showDetailView, destination: {
@@ -74,9 +77,9 @@ extension HomeView {
             CircleButtonView(iconName: showPortfolio ? "plus" : "info")
                 .background( CircleButtonAnimationView(animate: $showPortfolio))
                 .onTapGesture {
-                    if showPortfolio {
-                        showPortfolioView.toggle()
-                    }
+                    showPortfolio ? showPortfolioView.toggle() : showSettingsView.toggle()
+                        
+                   
                 }
             Spacer()
             Text(showPortfolio ? "Show Portfolio" : "Live Prices")

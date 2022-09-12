@@ -9,6 +9,8 @@ import SwiftUI
 
 struct XMarkButton: View {
     
+    @State var iconName : String = "xmark"
+    
     @Environment(\.dismiss) var dismiss
     var body: some View {
         
@@ -16,7 +18,7 @@ struct XMarkButton: View {
             dismiss()
             
         } label: {
-            Image(systemName: "xmark")
+            Image(systemName: iconName)
                 .font(.headline)
         }
 
